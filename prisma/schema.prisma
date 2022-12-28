@@ -1,0 +1,25 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Status {
+  WAITING
+  SENT
+}
+
+datasource db {
+  provider     = "mysql"
+  url          = env("SHADOW_DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model Message {
+  id          Int    @id @default(autoincrement())
+  phoneNumber String
+  message     String
+  dueDateTime DateTime
+  status      Status @default(WAITING)
+}
