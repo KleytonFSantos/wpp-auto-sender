@@ -1,6 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import { create, Whatsapp, SocketState } from 'venom-bot';
+import { isToday } from 'date-fns';
+import { PrismaService } from '../database/prisma.service';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 type QRCode = {
   base64Qrimg: string;
@@ -11,9 +14,40 @@ export class WhatsappService {
   private client: Whatsapp;
   public isConnected: boolean;
   public qrCode: QRCode;
+  private readonly logger = new Logger();
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     this.initialize();
+  }
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async logThisToMe() {
+    const messages = await this.prisma.message.findMany();
+
+    messages.map(async (item) => {
+      const messageDueDate = new Date(item.dueDateTime);
+      if (
+        this.isConnected &&
+        item.status === 'WAITING' &&
+        isToday(messageDueDate)
+      ) {
+        const checkDate =
+          messageDueDate.getHours() + 3 === new Date().getHours() &&
+          messageDueDate.getMinutes() === new Date().getMinutes();
+
+        if (checkDate) {
+          this.sendText(item.phoneNumber, item.message);
+          await this.updateStatusMessage(item.id);
+        }
+      }
+    });
+  }
+
+  async updateStatusMessage(id: number) {
+    await this.prisma.message.update({
+      where: { id: id },
+      data: { status: 'SENT' },
+    });
   }
 
   async sendText(to: string, body: string) {
