@@ -1,9 +1,11 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { parsePhoneNumber, isValidPhoneNumber } from 'libphonenumber-js';
 import { create, Whatsapp, SocketState } from 'venom-bot';
 import { isToday } from 'date-fns';
 import { PrismaService } from '../database/prisma.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import * as fs from 'fs';
+import * as buffer from 'buffer';
 
 type QRCode = {
   base64Qrimg: string;
@@ -14,11 +16,8 @@ export class WhatsappService {
   private client: Whatsapp;
   public isConnected: boolean;
   public qrCode: QRCode;
-  private readonly logger = new Logger();
 
-  constructor(private prisma: PrismaService) {
-    this.initialize();
-  }
+  constructor(private prisma: PrismaService) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async logThisToMe() {
@@ -81,6 +80,21 @@ export class WhatsappService {
   async initialize() {
     const qr = (base64Qrimg: string) => {
       this.qrCode = { base64Qrimg };
+      const matches = base64Qrimg.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/),
+        response = {} as any;
+
+      if (matches.length !== 3) {
+        return new Error('Invalid input string');
+      }
+
+      response.type = matches[1];
+      response.data = buffer.Buffer.from(matches[2], 'base64');
+
+      const imageBuffer = response;
+
+      fs.writeFile('out.png', imageBuffer['data'], 'binary', (err) => {
+        if (err != null) console.log(err);
+      });
     };
 
     const statusMessage = (statusSession: string) => {

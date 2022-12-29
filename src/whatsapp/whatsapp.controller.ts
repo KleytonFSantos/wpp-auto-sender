@@ -1,6 +1,9 @@
 import { Body, Controller, Get, Post, Res } from '@nestjs/common';
 import { WhatsappService } from './whatsapp.service';
 import { sendMessage } from './dto/send-message';
+import { Response } from 'express';
+import * as fs from 'fs';
+import { join } from 'path';
 
 @Controller()
 export class WhatsappController {
@@ -19,10 +22,21 @@ export class WhatsappController {
   }
 
   @Get('status')
-  async getStatus(@Res() res) {
-    const status = this.whatsappService.qrCode;
+  async getStatus(@Res({ passthrough: true }) res: Response) {
+    const filePath = join(__dirname, '..', '..', 'out.png');
     const connected = this.whatsappService.isConnected;
-    return res.status(200).json({
+
+    if (!connected) {
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+
+      await this.whatsappService.initialize();
+    }
+    while (!fs.existsSync(filePath) && !connected) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    const status = this.whatsappService.qrCode;
+    res.json({
       qrCode: status,
       connected: connected,
     });
