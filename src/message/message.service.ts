@@ -20,7 +20,11 @@ export class MessageService {
   }
 
   async findAll() {
-    const messages = await this.prisma.message.findMany();
+    const messages = await this.prisma.message.findMany({
+      orderBy: {
+        dueDateTime: 'desc',
+      },
+    });
 
     return messages;
   }
