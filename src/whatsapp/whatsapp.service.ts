@@ -19,12 +19,12 @@ export class WhatsappService {
 
   constructor(private prisma: PrismaService) {}
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
   async logThisToMe() {
     const messages = await this.prisma.message.findMany();
-
     messages.map(async (item) => {
       const messageDueDate = new Date(item.dueDateTime);
+      console.log(messageDueDate, new Date());
       if (
         this.isConnected &&
         item.status === 'WAITING' &&
