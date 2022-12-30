@@ -31,7 +31,7 @@ export class WhatsappService {
         isToday(messageDueDate)
       ) {
         const checkDate =
-          messageDueDate.getHours() + 3 === new Date().getHours() &&
+          messageDueDate.getHours() + 6 === new Date().getHours() &&
           messageDueDate.getMinutes() === new Date().getMinutes();
 
         if (checkDate) {
