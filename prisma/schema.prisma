@@ -19,7 +19,7 @@ datasource db {
 model Message {
   id          Int    @id @default(autoincrement())
   phoneNumber String
-  message     String
+  message     String @db.Text
   dueDateTime DateTime
   status      Status @default(WAITING)
 }

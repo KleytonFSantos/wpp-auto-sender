@@ -4,7 +4,7 @@ export class CreateMessageDto {
   id?: number;
   @IsNotEmpty()
   phoneNumber: string;
-  @Length(5, 500)
+  @Length(5, 5000)
   @IsNotEmpty()
   message: string;
   @IsString()
