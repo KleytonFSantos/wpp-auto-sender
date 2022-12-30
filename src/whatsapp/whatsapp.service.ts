@@ -24,14 +24,15 @@ export class WhatsappService {
     const messages = await this.prisma.message.findMany();
     messages.map(async (item) => {
       const messageDueDate = new Date(item.dueDateTime);
-      console.log(messageDueDate, new Date());
+      console.log(messageDueDate.getHours() + 3, new Date());
+      console.log(messageDueDate.getHours() + 3 === new Date().getHours());
       if (
         this.isConnected &&
         item.status === 'WAITING' &&
         isToday(messageDueDate)
       ) {
         const checkDate =
-          messageDueDate.getHours() + 6 === new Date().getHours() &&
+          messageDueDate.getHours() + 3 === new Date().getHours() &&
           messageDueDate.getMinutes() === new Date().getMinutes();
 
         if (checkDate) {
