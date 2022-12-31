@@ -22,7 +22,7 @@ export class WhatsappController {
   }
 
   @Get('status')
-  async getStatus(@Res({ passthrough: true }) res: Response) {
+  async getStatus(@Res() res: Response) {
     const filePath = join(__dirname, '..', '..', 'out.png');
     const connected = this.whatsappService.isConnected;
 
@@ -34,7 +34,6 @@ export class WhatsappController {
     while (!fs.existsSync(filePath) && !connected) {
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
-
     const status = this.whatsappService.qrCode;
     res.json({
       qrCode: status,
